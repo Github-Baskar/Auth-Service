@@ -5,12 +5,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { googleLogout } from '@react-oauth/google';
 import { toast } from 'react-toastify';
 
-import { profileName } from '../../utilities';
 import { useSignOutMutation } from '../../slices/usersApiSlice';
 import { logout } from '../../slices/authSlice';
 import { MenuIcon } from '../../icons';
 import Button from '../baseComponents/Button';
 import NavMenuList from './NavMenuList';
+import ProfileLogo from '../baseComponents/ProfileLogo';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -36,7 +36,6 @@ const Header = () => {
             console.error(err);
         }
     };
-
     return (
         <nav className='header-wrapper flex justify-center items-center bg-gray sticky top-0 z-[100] h-[80px] shadow-md'>
             <div className="header-content flex justify-between items-center w-[100%] md:w-[80%] lg:w-[75%] xl:w-[65%] p-4 md:p-0">
@@ -68,11 +67,10 @@ const Header = () => {
                     footer={
                         <div className="flex justify-between items-center">
                             <div className="flex items-center">
-                                <div className="profile-picture-name flex justify-center items-center rounded-full cursor-pointer w-[38px] h-[38px] font-medium text-[16px] bg-[#6A5FF3] text-[#fff]">
-                                    {
-                                        userInfo?.name ? profileName(userInfo.name) : profileName("Guest User")
-                                    }
-                                </div>
+                                <ProfileLogo
+                                    imageURL={userInfo?.dp || null}
+                                    name={userInfo?.name || 'Guest User'}
+                                />
                                 <div className="ms-2">
                                     <p className='font-semibold text-[#333] text-[1rem] tracking-[1px]'>{userInfo?.name ? userInfo.name : 'Guest User'}</p>
                                 </div>
@@ -83,7 +81,7 @@ const Header = () => {
                                         type={'button'}
                                         className='btn bg-[#03A9F4] text-[#fff] text-[0.8rem] uppercase font-semibold px-3 py-1 w-fit hover:bg-[#fff] hover:text-[#03A9F4] hover:border-[#03A9F4]'
                                         loading={isLoading}
-                                        onClick={()=>{
+                                        onClick={() => {
                                             signout();
                                             onClose()
                                         }}
@@ -107,7 +105,7 @@ const Header = () => {
                     />
                 </AntDrawer>
             </div>
-        </nav >
+        </nav>
     )
 }
 

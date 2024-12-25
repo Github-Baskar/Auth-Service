@@ -29,7 +29,9 @@ function App() {
                     </Route>
                     <Route path='/page-404' element={<ErrorPage />} />
                 </Routes>
-                <ToastContainer />
+                <ToastContainer
+                    position="top-center"
+                />
             </Suspense>
         </Router>
     )

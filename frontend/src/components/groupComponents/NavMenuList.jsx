@@ -1,9 +1,9 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Popover as AntPopover } from 'antd';
 
-import { menuList, profileName } from '../../utilities';
+import { menuList } from '../../utilities';
 import Button from '../baseComponents/Button';
+import ProfileLogo from '../baseComponents/ProfileLogo';
 
 const NavMenuList = ({
     isLoading = false,
@@ -68,9 +68,12 @@ const NavMenuList = ({
                     }
                     placement="bottomRight"
                 >
-                    <div className="profile-picture-name flex justify-center items-center rounded-full cursor-pointer w-[40px] h-[40px] font-medium text-[20px] bg-[#6A5FF3] text-[#fff]">
-                        {userInfo?.name ? profileName(userInfo.name) : profileName("Guest User")}
-                    </div>
+                    <>
+                        <ProfileLogo
+                            imageURL={userInfo?.dp || null}
+                            name={userInfo?.name || 'Guest User'}
+                        />
+                    </>
                 </AntPopover>
             </li>
         </ul>

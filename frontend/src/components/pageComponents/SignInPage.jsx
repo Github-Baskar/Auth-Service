@@ -20,9 +20,11 @@ const SignInPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isOauthLoading, setOauthIsLoading] = useState(false);
     const { userInfo } = useSelector((state) => state.auth);
     const { initialValues, fields, validationSchema } = signInForm
-    const [signIn, { isLoading }] = useSignInMutation();
+    const [signIn] = useSignInMutation();
 
     const schema = yup.object().shape({ ...validationSchema })
     const {
@@ -36,16 +38,7 @@ const SignInPage = () => {
         defaultValues: initialValues
     })
     const submitHandler = async (data) => {
-        const { email, password } = data
-        try {
-            const res = await signIn({ email, password }).unwrap();
-            dispatch(setCredentials({ ...res }));
-            reset(initialValues);
-            toast.success('Signed in successfully! Welcome back!');
-            navigate('/');
-        } catch (err) {
-            toast.error(err?.data?.message || err.error);
-        }
+        authUser(data, setIsLoading);
     }
 
     const signin = useGoogleLogin({
@@ -61,7 +54,6 @@ const SignInPage = () => {
 
     useEffect(() => {
         if (user) {
-            console.log(user, "user")
             axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
                 headers: {
                     Authorization: `Bearer ${user.access_token}`,
@@ -69,23 +61,30 @@ const SignInPage = () => {
                 }
             })
                 .then((res) => {
-                    console.log(res.data, "user response");
-                    const authUser = async (data) => {
-                        try {
-                            const { email, picture } = data
-                            const res = await signIn({ email }).unwrap();
-                            dispatch(setCredentials({ ...res, dp: picture }));
-                            toast.success('Signed in successfully! Welcome back!');
-                            navigate('/');
-                        } catch (err) {
-                            toast.error(err?.data?.message || err.error);
-                        }
-                    }
-                    authUser(res.data);
+                    authUser(res.data, setOauthIsLoading);
                 })
                 .catch((err) => console.log(err));
         }
     }, [user]);
+
+    const authUser = async (data, setIsLoading) => {
+        try {
+            const { email, password, picture } = data
+            if (email && password) {
+                const res = await signIn({ email, password }).unwrap();
+                dispatch(setCredentials({ ...res }));
+                reset(initialValues);
+            } else if (email && picture) {
+                const res = await signIn({ email }).unwrap();
+                dispatch(setCredentials({ ...res, dp: picture }));
+            }
+            toast.success('Signed in successfully! Welcome back!');
+            navigate('/');
+        } catch (err) {
+            toast.error(err?.data?.message || err.error);
+        }
+        setIsLoading(false);
+    }
 
     return (
         <div className="auth-page-wrapper flex flex-1 flex-col justify-center bg-gray h-[100vh]">
@@ -113,6 +112,7 @@ const SignInPage = () => {
                                     type='submit'
                                     className='bg-[#03A9F4] text-[#fff] uppercase hover:!bg-[rgba(3,169,244,0.7)] hover:!text-[#fff] focus-visible:outline-0 border-0 rounded-md py-4 lg:py-5 text-sm/6 font-semibold w-full'
                                     loading={isLoading}
+                                    onClick={() => setIsLoading(true)}
                                 >
                                     Sign in
                                 </Button>
@@ -124,9 +124,12 @@ const SignInPage = () => {
                 <Button
                     type='button'
                     className='border border-black rounded-md py-4 lg:py-5 text-sm/6 font-semibold w-full hover:bg-[rgba(0,58,228,.04)]'
-                    loading={isLoading}
+                    loading={isOauthLoading}
                     icon={<GoogleIcon />}
-                    onClick={signin}
+                    onClick={() => {
+                        setOauthIsLoading(true);
+                        signin();
+                    }}
                 >
                     Continue with Google
                 </Button>

@@ -20,9 +20,11 @@ const SignUpPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isOauthLoading, setOauthIsLoading] = useState(false);
     const { userInfo } = useSelector((state) => state.auth);
     const { initialValues, fields, validationSchema } = signUpForm
-    const [signUp, { isLoading }] = useSignUpMutation();
+    const [signUp] = useSignUpMutation();
 
     const schema = yup.object().shape({ ...validationSchema })
     const {
@@ -37,20 +39,7 @@ const SignUpPage = () => {
     })
 
     const submitHandler = async (data) => {
-        const { name, email, password, confirmPassword } = data
-        if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
-        } else {
-            try {
-                const res = await signUp({ name, email, password, authType: 'password' }).unwrap();
-                dispatch(setCredentials({ ...res }));
-                reset(initialValues);
-                toast.success('Account created successfully! Welcome aboard!');
-                navigate('/');
-            } catch (err) {
-                toast.error(err?.data?.message || err.error);
-            }
-        }
+        registerUser(data, setIsLoading);
     };
 
     const signup = useGoogleLogin({
@@ -66,7 +55,6 @@ const SignUpPage = () => {
 
     useEffect(() => {
         if (user) {
-            console.log(user, "user")
             axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
                 headers: {
                     Authorization: `Bearer ${user.access_token}`,
@@ -74,23 +62,31 @@ const SignUpPage = () => {
                 }
             })
                 .then((res) => {
-                    console.log(res.data, "user response");
-                    const registerUser = async (data) => {
-                        try {
-                            const { name, email } = data
-                            const res = await signUp({ name, email, authType: user?.access_token ? 'oauth' : 'password' }).unwrap();
-                            dispatch(setCredentials({ ...res }));
-                            toast.success('Account created successfully! Welcome aboard!');
-                            navigate('/');
-                        } catch (err) {
-                            toast.error(err?.data?.message || err.error);
-                        }
-                    }
-                    registerUser(res.data);
+                    registerUser(res.data, setOauthIsLoading, user.access_token);
                 })
                 .catch((err) => console.log(err));
         }
     }, [user]);
+
+    const registerUser = async (data, setIsLoading, ...rest) => {
+        const { name, email, password, confirmPassword } = data
+        const [token] = rest
+        try {
+            let res;
+            if (name && email && token) {
+                res = await signUp({ name, email, authType: user?.access_token ? 'oauth' : 'password' }).unwrap();
+            } else if (name && email && password === confirmPassword) {
+                res = await signUp({ name, email, password, authType: 'password' }).unwrap();
+                reset(initialValues);
+            }
+            dispatch(setCredentials({ ...res }));
+            toast.success('Account created successfully! Welcome aboard!');
+            navigate('/');
+        } catch (err) {
+            toast.error(err?.data?.message || err.error);
+        }
+        setIsLoading(false);
+    }
 
     return (
         <div className="auth-page-wrapper flex flex-1 flex-col justify-center bg-gray min-h-[100vh]">
@@ -118,6 +114,7 @@ const SignUpPage = () => {
                                     type='submit'
                                     className='bg-[#03A9F4] text-[#fff] uppercase hover:!bg-[rgba(3,169,244,0.7)] hover:!text-[#fff] focus-visible:outline-0 border-0 rounded-md py-4 lg:py-5 text-sm/6 font-semibold w-full'
                                     loading={isLoading}
+                                    onClick={() => setIsLoading(true)}
                                 >
                                     Sign up
                                 </Button>
@@ -129,8 +126,12 @@ const SignUpPage = () => {
                 <Button
                     type='button'
                     className='border border-black rounded-md py-4 lg:py-5 text-sm/6 font-semibold w-full hover:bg-[rgba(0,58,228,.04)]'
+                    loading={isOauthLoading}
                     icon={<GoogleIcon />}
-                    onClick={signup}
+                    onClick={() => {
+                        setOauthIsLoading(true);
+                        signup();
+                    }}
                 >
                     Continue with Google
                 </Button>
