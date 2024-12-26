@@ -70,8 +70,30 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'User logged out' });
 });
 
+// @desc        Get user list
+// route        GET /api/users
+// @access      Private
+const getUserList = asyncHandler(async (req, res) => {
+    const usersList = await User.find({}, {
+        _id: 1,
+        name: 1,
+        authType: 1,
+        createdAt: 1,
+    });
+    if (Array.isArray(usersList) && usersList.length > 0) {
+        res.status(200).json({
+            message: '',
+            data: usersList
+        });
+    } else {
+        res.status(204);
+        throw new Error('No records.')
+    }
+});
+
 export {
     authUser,
     registerUser,
     logoutUser,
+    getUserList,
 };
