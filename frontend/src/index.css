@@ -5,3 +5,9 @@
 .active{
     color: #284be5;
 }
+
+.user-list-table .ant-table-thead .ant-table-cell{
+    background-color: rgba(106, 95, 243, 0.7);
+    color: #f7f9fb;
+    font-weight: 600;
+}

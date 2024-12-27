@@ -24,7 +24,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
             }),
         }),
         getUsers: builder.query({
-            query: () => `${USERS_URL}/users`
+            query: () => `${USERS_URL}/list`
         }),
     }),
 });

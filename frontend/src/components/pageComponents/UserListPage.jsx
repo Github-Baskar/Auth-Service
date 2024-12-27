@@ -1,17 +1,21 @@
 import { Table as AntTable } from 'antd';
 import dayjs from 'dayjs';
 import { useGetUsersQuery } from '../../slices/usersApiSlice';
+import { useEffect, useState } from 'react';
 
 const columns = [
     {
-        title: 'S.No.',
-        dataIndex: 'key',
-        rowScope: 'row',
+        title: 'S.No',
+        dataIndex: 'id',
+        key: 'id',
+        width: '8%',
+        render: (text) => text,
     },
     {
         title: 'Name',
         dataIndex: 'name',
         key: 'name',
+        width: '30%',
         render: (text) => <>{text || '--'}</>,
     },
     {
@@ -27,41 +31,39 @@ const columns = [
         render: (text) => <>{text && dayjs(text).format('DD MMM YYYY') || '--'}</>,
     }
 ];
-const data = [
-    {
-        key: '1',
-        name: 'John Brown',
-        authType: 'password',
-        createdAt: '2022-01-01',
-    },
-    {
-        key: '2',
-        name: 'Jim Green',
-        authType: 'oauth',
-        createdAt: '2022-01-01',
-    },
-    {
-        key: '3',
-        name: 'Joe Black',
-        authType: 'password',
-        createdAt: '2022-01-01',
-    },
-];
 const UserListPage = () => {
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const {
-        data: usersList = '',
+        data: usersList,
         error: usersListError,
         isLoading: usersListLoading,
     } = useGetUsersQuery();
-    console.log(usersList)
+
+    useEffect(() => {
+        setIsLoading(true);
+        if (usersListError) {
+            console.error(usersListError);
+            setIsLoading(usersListLoading);
+        } else if(usersList) {
+            const { data } = usersList;
+            const newDataSet = Array.isArray(data) && data.length > 0 ?
+                data.map((item, index) => ({ ...item, key: item._id, id: index + 1 })) : [];
+            setData(newDataSet);
+            setIsLoading(usersListLoading);
+        }
+    }, [usersList])
+
     return (
-        <div className='home-page relative flex flex-col justify-center items-center w-[100vw] sm:w-[80%] lg:w-[75%] xl:w-[65%] min-h-[calc(100vh-80px)] p-4 lg:p-0 mx-auto'>
+        <div className='home-page flex justify-center w-[100vw] sm:w-[80%] lg:w-[75%] xl:w-[65%] p-4 lg:p-0 mx-auto my-4 lg:my-6'>
             <AntTable
-                className='w-full'
-                loading={usersListLoading}
+                className='user-list-table w-full'
+                loading={isLoading}
                 columns={columns}
                 dataSource={data}
-                pagination={{ pageSize: 1 }}
+                rowKey={"_id"}
+                pagination={{ pageSize: 10 }}
+                scroll={{ x: 500 }}
             />
         </div>
     )

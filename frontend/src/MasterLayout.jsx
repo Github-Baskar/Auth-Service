@@ -3,7 +3,7 @@ import Header from './components/groupComponents/Header'
 
 const MasterLayout = () => {
     return (
-        <div className='bg-gray'>
+        <div className='bg-gray min-h-[100vh]'>
             <Header />
             <Outlet />
         </div>
